@@ -4,16 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fe7c9e26-3b7f-49b1-b617-dc184aad7da7" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/Earthquake.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/GUI.kt" afterDir="false" />
+    <list default="true" id="fe7c9e26-3b7f-49b1-b617-dc184aad7da7" name="Changes" comment="Ändu">
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Earthquake.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Earthquake.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,8 +84,16 @@
       <updated>1670223009452</updated>
       <workItem from="1670223010938" duration="7957000" />
       <workItem from="1670253284289" duration="2035000" />
-      <workItem from="1670858631388" duration="2706000" />
+      <workItem from="1670858631388" duration="2865000" />
     </task>
+    <task id="LOCAL-00001" summary="Ändu">
+      <created>1670863260676</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1670863260676</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -112,5 +112,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="Ändu" />
+    <option name="LAST_COMMIT_MESSAGE" value="Ändu" />
   </component>
 </project>

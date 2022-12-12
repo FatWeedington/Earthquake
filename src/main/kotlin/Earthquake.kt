@@ -51,7 +51,7 @@ data class Properties(
     val title: String
 ){
     @Contextual
-    val timeLD = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault())
+    val timeLD: LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault())
     
 }
 
