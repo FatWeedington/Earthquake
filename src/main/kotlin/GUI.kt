@@ -1,24 +1,20 @@
 import javafx.beans.binding.Bindings
+import javafx.collections.ObservableList
 import javafx.geometry.Pos
 import javafx.scene.control.DateCell
 import javafx.scene.control.TableView
 import javafx.scene.layout.Priority
 import javafx.stage.Stage
+import kotlinx.coroutines.Dispatchers
+
 import tornadofx.*
-import tornadofx.Stylesheet.Companion.empty
-import java.io.BufferedWriter
+
 import java.io.File
 import java.time.LocalDate
-import javax.naming.Binding
-import javax.swing.GroupLayout.Alignment
-
-var fromDate = LocalDate.now().toProperty()
-var toDate = LocalDate.now().toProperty()
-private fun eQs() = getEarthQuakes().features.map { i -> i.properties }.asObservable()
 
 fun main(args: Array<String>) {
-    launch<GUI>(args)
-}
+        launch<GUI>(args)
+    }
 
 class GUI : App(MainView::class){
     override fun start(stage: Stage) {
@@ -30,8 +26,18 @@ class GUI : App(MainView::class){
 
 class MainView : View("MyFirstTornadoApp") {
 
+    private var fromDate = LocalDate.now().toProperty()
+    private var toDate = LocalDate.now().toProperty()
+
+     private fun eQs() = getEarthQuakes(fromDate.value,toDate.value).features.map { i -> i.properties }.asObservable()
+
+     private var eq = eQs()
+     private fun updateEqs(){
+        eq.asyncItems { eQs() }
+    }
+
     override val root = borderpane {
-        top() {
+        top {
             hbox(spacing = 20) {
                 hboxConstraints {
                     minHeight = 35.0
@@ -48,10 +54,15 @@ class MainView : View("MyFirstTornadoApp") {
                                 override fun updateItem(item: LocalDate, empty: Boolean) {
                                     super.updateItem(item, empty)
                                     isDisable =
-                                        item.isAfter(LocalDate.now()) || item.isBefore(LocalDate.now().minusYears(10))
+                                        item.isAfter(LocalDate.now()) || item.isBefore(LocalDate.now().minusYears(10)) || item.isAfter(toDate.value)
                                 }
                             }
                         }
+                        setOnAction{ runAsync{
+                            updateEqs()
+                        }fail{
+                            println("error")
+                        } }
                     }
                     hbox(spacing = 8) {
                         hboxConstraints {
@@ -64,28 +75,32 @@ class MainView : View("MyFirstTornadoApp") {
                                 object : DateCell() {
                                     override fun updateItem(item: LocalDate, empty: Boolean) {
                                         super.updateItem(item, empty)
-                                        isDisable = item.isAfter(LocalDate.now()) || item.isBefore(fromDP.value)
+                                        isDisable = item.isAfter(LocalDate.now()) || item.isBefore(fromDP.value) || item.isBefore(fromDate.value)
                                     }
                                 }
                             }
+                            setOnAction{ runAsync{
+                                updateEqs()
+                            }fail{
+                                println("error")
+                            } }
                         }
                     }
                 }
             }
         }
             center {
-                //Build Fields of Tableview
-                val tblView = tableview(eQs()) {
-                    readonlyColumn("Title", Properties::title)
-                    readonlyColumn("Type", Properties::type)
-                    readonlyColumn("Place", Properties::place)
-                    readonlyColumn("Time", Properties::timeLD)
-                    readonlyColumn("Magnitude", Properties::mag)
+                    tableview(eq) {
+                        readonlyColumn("Title", Properties::title)
+                        readonlyColumn("Type", Properties::type)
+                        readonlyColumn("Place", Properties::place)
+                        readonlyColumn("Time", Properties::timeLD)
+                        readonlyColumn("Magnitude", Properties::mag)
 
-                    columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
+                        columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
+                        vboxConstraints {
 
-                    vboxConstraints {
-                        vGrow = Priority.ALWAYS
+                            vGrow = Priority.ALWAYS
                     }
                 }
             }
@@ -101,11 +116,12 @@ class MainView : View("MyFirstTornadoApp") {
                           val fileName = getFileName()
                             val writer = File(fileName).bufferedWriter()
 
-                          for(e in eQs()){
+                          for(e in eq){
                               writer.append("${e.title},${e.type},${e.place},${e.timeLD},${e.mag}\n")
                           }
+                          writer.flush()
+                          writer.close()
                     }
-
                 }
             }
         }

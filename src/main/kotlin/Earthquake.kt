@@ -4,9 +4,11 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.net.URL
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.Temporal
 import java.util.TimeZone
 
 // Count all available event
@@ -22,7 +24,7 @@ const val urlCount3 =
 
 // Query all available events with parameters
 const val urlQuery =
-    "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2022-12-4&updatedafter=2022-12-4T8:00:00"
+    "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime="
 
 @Serializable
 data class EarthQuakesCount(
@@ -51,7 +53,7 @@ data class Properties(
     val title: String
 ){
     @Contextual
-    val timeLD: LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault())
+    val timeLD: LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),ZoneId.of("UTC"))
     
 }
 
@@ -86,8 +88,8 @@ fun getEarthQuakesCount(): EarthQuakesCount {
     return Json.decodeFromString(jsonString)
 }
 
-fun getEarthQuakes(): FeatureCollection {
-    val jsonString = URL(urlQuery).readText()
+fun getEarthQuakes(from: LocalDate,to:LocalDate): FeatureCollection {
+    val jsonString = URL("$urlQuery${from}T00:00:00&endtime=${to}T23:59:59").readText()
     val json = Json { ignoreUnknownKeys = true }
     return json.decodeFromString(jsonString)
 }

@@ -126,11 +126,6 @@
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jetbrains.kotlinx</groupId>
-            <artifactId>kotlinx-coroutines-core</artifactId>
-            <version>1.6.4</version>
-        </dependency>
-        <dependency>
             <groupId>no.tornado</groupId>
             <artifactId>tornadofx</artifactId>
             <version>${tornadofx.version}</version>
@@ -140,6 +135,11 @@
             <artifactId>javafx-controls</artifactId>
             <version>${version.openjavafx}</version>
             <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core-jvm</artifactId>
+            <version>1.6.4</version>
         </dependency>
     </dependencies>
 </project>
