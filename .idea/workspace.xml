@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fe7c9e26-3b7f-49b1-b617-dc184aad7da7" name="Changes" comment="Ändu">
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Earthquake.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Earthquake.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/Earthquakes_2022-12-13-2022-12-18.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/GUI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/GUI.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,6 +43,11 @@
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\fatweedington\IdeaProjects\prog2\Earthquake\data" />
+    </key>
+  </component>
   <component name="RunManager" selected="Kotlin.GUIKt">
     <configuration name="EarthquakeKt" type="JetRunConfigurationType" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="EarthquakeKt" />
@@ -84,7 +91,8 @@
       <updated>1670223009452</updated>
       <workItem from="1670223010938" duration="7957000" />
       <workItem from="1670253284289" duration="2035000" />
-      <workItem from="1670858631388" duration="2865000" />
+      <workItem from="1670858631388" duration="2873000" />
+      <workItem from="1671349441417" duration="14414000" />
     </task>
     <task id="LOCAL-00001" summary="Ändu">
       <created>1670863260676</created>
@@ -93,7 +101,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670863260676</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Ändu">
+      <created>1670863386415</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1670863386415</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
