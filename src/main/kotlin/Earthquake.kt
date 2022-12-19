@@ -11,17 +11,6 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.Temporal
 import java.util.TimeZone
 
-// Count all available event
-const val urlCount = "https://earthquake.usgs.gov/fdsnws/event/1/count?format=geojson"
-
-// Count all available event in a time frame
-const val urlCount2 =
-    "https://earthquake.usgs.gov/fdsnws/event/1/count?format=geojson&starttime=2022-01-01&endtime=2022-01-31"
-
-// Count all available event from a given start time & updateed after a given time
-const val urlCount3 =
-    "https://earthquake.usgs.gov/fdsnws/event/1/count?format=geojson&starttime=2022-10-21&updatedafter=2022-10-21T8:00:00"
-
 // Query all available events with parameters
 const val urlQuery =
     "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime="
@@ -53,7 +42,7 @@ data class Properties(
     val title: String
 ){
     @Contextual
-    val timeLD: LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),ZoneId.of("UTC"))
+    val timeLD: LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),ZoneId.systemDefault())
     
 }
 
@@ -83,13 +72,4 @@ data class FeatureCollection(
     val features: Array<Feature>
 )
 
-fun getEarthQuakesCount(): EarthQuakesCount {
-    val jsonString = URL(urlCount3).readText()
-    return Json.decodeFromString(jsonString)
-}
 
-fun getEarthQuakes(from: LocalDate,to:LocalDate): FeatureCollection {
-    val jsonString = URL("$urlQuery${from}T00:00:00&endtime=${to}T23:59:59").readText()
-    val json = Json { ignoreUnknownKeys = true }
-    return json.decodeFromString(jsonString)
-}
