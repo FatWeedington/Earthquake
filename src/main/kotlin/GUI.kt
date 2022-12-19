@@ -12,6 +12,7 @@ import tornadofx.*
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.concurrent.fixedRateTimer
 
 private var fromDate = LocalDate.now().toProperty()
 private var toDate = LocalDate.now().toProperty()
@@ -30,10 +31,15 @@ class GUI : App(MainView::class) {
 }
 
 class MainView : View("Earthquakes") {
+    init {
+        fixedRateTimer("Timer", true, 0L, 5000) {
+                earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.toObservable()}.fail {
+                alert(Alert.AlertType.ERROR,"Error",it.message).showAndWait()
+            }
+        }
+    }
 
     override val root = borderpane {
-        updateEqs()
-
         top {
             menubar {
                 menu("Files") {
@@ -50,7 +56,12 @@ class MainView : View("Earthquakes") {
                 menu("Tools") {
                     item("Show Graph")
                     action {
-                        find<NewWindow>().openWindow()
+                        if (getDailyEvents().size < 2){
+                            alert(Alert.AlertType.WARNING, "Not enough Days", content = "Please specify a time-range from at least two Days")
+                        }
+                        else {
+                            find<NewWindow>().openWindow()
+                        }
                     }
                 }
             }
@@ -93,7 +104,14 @@ class MainView : View("Earthquakes") {
                             }
                         }
                         setOnAction {
-                            updateEqs()
+                            earthQuakes.asyncItems {
+                                getEarthQuakes(
+                                    fromDate.value,
+                                    toDate.value
+                                ).features.map { i -> i.properties }.toObservable()
+                            }.fail {
+                                alert(Alert.AlertType.ERROR, "Error", it.message).showAndWait()
+                            }
                         }
                     }
                     hbox(spacing = 8) {
@@ -115,7 +133,11 @@ class MainView : View("Earthquakes") {
                                 }
                             }
                             setOnAction {
-                                updateEqs()
+                                runAsync {
+                                    earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.toObservable()}
+                                } fail {
+                                   alert(Alert.AlertType.ERROR,"Error",it.message).showAndWait()
+                                }
                             }
                         }
                     }
@@ -134,26 +156,11 @@ class MainView : View("Earthquakes") {
             }
         }
     }
-
     private fun getFileName(): String {
         return if (fromDate.value == toDate.value) {
             "data${File.separator}Earthquakes_${fromDate.value}.csv"
         } else {
             "data${File.separator}Earthquakes_${fromDate.value}-${toDate.value}.csv"
-        }
-    }
-
-
-    private fun eQs() = getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.asObservable()
-
-
-    private fun updateEqs() {
-        earthQuakes.asyncItems { eQs() }.fail {
-            alert(
-                Alert.AlertType.ERROR,
-                "Data could not be received",
-                content = "${it.message}"
-            ).showAndWait()
         }
     }
 }
