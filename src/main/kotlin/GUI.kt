@@ -36,8 +36,8 @@ class MainView : View("Earthquakes") {
     init {
         fixedRateTimer("Timer", true, 0L, 5000) {
             updateEarthQuakes()
-            }
         }
+    }
 
     override val root = borderpane {
         top {
@@ -65,10 +65,13 @@ class MainView : View("Earthquakes") {
                 menu("Tools") {
                     item("Show Graph")
                     action {
-                        if (getDailyEvents().size < 2){
-                            alert(Alert.AlertType.WARNING, "Not enough Days", content = "Please specify a time-range from at least two Days")
-                        }
-                        else {
+                        if (getDailyEvents().size < 2) {
+                            alert(
+                                Alert.AlertType.WARNING,
+                                "Not enough Days",
+                                content = "Please specify a time-range from at least two Days"
+                            )
+                        } else {
                             find<ChartWindow>().openWindow()
                         }
                     }
@@ -143,62 +146,7 @@ class MainView : View("Earthquakes") {
             }
         }
     }
-
-
-
-    private fun updateEarthQuakes() = runAsync {
-                                                    earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.toObservable()}
-                                                } fail {
-                                                    alert(Alert.AlertType.ERROR,"Error",it.message).showAndWait()
-                                                }
-
-    private fun exportCSV() {
-        val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data${File.separator}"),FileChooserMode.Save){
-            initialFileName = getFileName()
-        }
-        if(fileName.size == 1){
-            val writer = fileName[0].bufferedWriter()
-            writer.use {
-                for (e in earthQuakes) {
-                    writer.append("${e.type},${e.location},${e.region},${e.timeLD},${e.mag}\n")
-                }
-            }
-        }
-    }
-
-    private fun getFileName(): String {
-        return if (fromDate.value == toDate.value) {
-            "Earthquakes_${fromDate.value}.csv"
-        } else {
-            "Earthquakes_${fromDate.value}-${toDate.value}.csv"
-        }
-    }
 }
-
-private fun importCSV():ObservableList<Properties> {
-    val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data${File.separator}"),FileChooserMode.Single)
-    if(fileName.size == 1){
-        val prop = mutableListOf<Properties>()
-        val lines = fileName[0].useLines { it.toList() }
-
-        lines.forEach {
-            val fields = it.split(",")
-            val type = fields[0]
-            val place = "${fields[1]},${fields[2]}"
-            val time = LocalDateTime.parse(fields[3]).toInstant(ZoneId.systemDefault().rules.getOffset(LocalDateTime.now())).toEpochMilli()
-            val mag = if(fields[4] == "null"){
-                null
-            }
-            else{fields[4].toDouble()}
-
-            prop.add(Properties(mag,place,time,type))
-        }
-        return prop.toObservable()
-    }
-    else{return observableListOf()}
-}
-
-
 class CsvWindow : Fragment("Graph") {
     override val root =
         tableview(importCSV()) {
@@ -259,6 +207,57 @@ class ChartWindow : Fragment("Imported Data") {
         }
         return xAxis
     }
+
+    private fun updateEarthQuakes() = runAsync {
+                                                    earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.toObservable()}
+                                                } fail {
+                                                    alert(Alert.AlertType.ERROR,"Error",it.message).showAndWait() }
+
+    private fun exportCSV() {
+        val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data${File.separator}"),FileChooserMode.Save){
+            initialFileName = getFileName()
+        }
+        if(fileName.size == 1){
+            val writer = fileName[0].bufferedWriter()
+            writer.use {
+                for (e in earthQuakes) {
+                    writer.append("${e.type},${e.location},${e.region},${e.timeLD},${e.mag}\n")
+                }
+            }
+        }
+    }
+
+
+private fun importCSV():ObservableList<Properties> {
+    val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data${File.separator}"),FileChooserMode.Single)
+    if(fileName.size == 1){
+        val prop = mutableListOf<Properties>()
+        val lines = fileName[0].useLines { it.toList() }
+
+        lines.forEach {
+            val fields = it.split(",")
+            val type = fields[0]
+            val place = "${fields[1]},${fields[2]}"
+            val time = LocalDateTime.parse(fields[3]).toInstant(ZoneId.systemDefault().rules.getOffset(LocalDateTime.now())).toEpochMilli()
+            val mag = if(fields[4] == "null"){
+                null
+            }
+            else{fields[4].toDouble()}
+
+            prop.add(Properties(mag,place,time,type))
+        }
+        return prop.toObservable()
+    }
+    else{return observableListOf()}
+}
+    private fun getFileName(): String {
+        return if (fromDate.value == toDate.value) {
+            "Earthquakes_${fromDate.value}.csv"
+        } else {
+            "Earthquakes_${fromDate.value}-${toDate.value}.csv"
+        }
+    }
+
 
     private fun getMinDate() = earthQuakes.minOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
 
