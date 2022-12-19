@@ -1,4 +1,3 @@
-import javafx.beans.binding.BooleanExpression
 import javafx.geometry.Pos
 import javafx.scene.chart.NumberAxis
 import javafx.scene.control.Alert
@@ -7,7 +6,6 @@ import javafx.scene.control.TableView
 import javafx.scene.layout.Priority
 import javafx.stage.Stage
 import javafx.util.StringConverter
-import kotlinx.coroutines.currentCoroutineContext
 import tornadofx.*
 import java.io.File
 import java.time.LocalDate
