@@ -10,7 +10,6 @@ import javafx.stage.Stage
 import javafx.util.StringConverter
 import tornadofx.*
 import java.io.File
-import java.net.URL
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -77,7 +76,7 @@ class MainView : View("Earthquakes") {
             }
         }
 
-        center() {
+        center {
             tableview(earthQuakes) {
                 readonlyColumn("Type", Properties::type)
                 readonlyColumn("Location", Properties::location)
@@ -196,7 +195,7 @@ private fun importCSV():ObservableList<Properties> {
         }
         return prop.toObservable()
     }
-    else{return observableListOf<Properties>()}
+    else{return observableListOf()}
 }
 
 
@@ -209,6 +208,11 @@ class CsvWindow : Fragment("Graph") {
             readonlyColumn("Date", Properties::dateText)
             readonlyColumn("Time", Properties::timeText)
             readonlyColumn("Magnitude", Properties::mag)
+
+            columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
+            vboxConstraints {
+                vGrow = Priority.ALWAYS
+            }
 
             columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
             vboxConstraints {
