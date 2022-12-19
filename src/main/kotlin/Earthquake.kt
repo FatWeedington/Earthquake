@@ -15,11 +15,6 @@ import java.util.TimeZone
 const val urlQuery =
     "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime="
 
-@Serializable
-data class EarthQuakesCount(
-    val count: Int,
-    val maxAllowed: Int
-)
 
 /**
  * Properties of an earthquake events
@@ -43,6 +38,8 @@ data class Properties(
 ){
     @Contextual
     val timeLD: LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),ZoneId.systemDefault())
+    val timeText: String = timeLD.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+    val dateText: String = timeLD.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
     
 }
 

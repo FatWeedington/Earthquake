@@ -1,22 +1,21 @@
-import javafx.beans.binding.Bindings
-import javafx.collections.ObservableList
+import javafx.beans.binding.BooleanExpression
 import javafx.geometry.Pos
-import javafx.scene.Scene
+import javafx.scene.chart.NumberAxis
 import javafx.scene.control.Alert
 import javafx.scene.control.DateCell
 import javafx.scene.control.TableView
 import javafx.scene.layout.Priority
 import javafx.stage.Stage
-import kotlinx.coroutines.Dispatchers
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-
+import javafx.util.StringConverter
+import kotlinx.coroutines.currentCoroutineContext
 import tornadofx.*
-
 import java.io.File
-import java.lang.Exception
-import java.net.URL
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
+private var fromDate = LocalDate.now().toProperty()
+private var toDate = LocalDate.now().toProperty()
+private var earthQuakes = mutableListOf<Properties>().asObservable()
 
 fun main(args: Array<String>) {
     launch<GUI>(args)
@@ -31,9 +30,6 @@ class GUI : App(MainView::class) {
 }
 
 class MainView : View("Earthquakes") {
-    private var fromDate = LocalDate.now().toProperty()
-    private var toDate = LocalDate.now().toProperty()
-    private var eq = mutableListOf<Properties>().asObservable()
 
     override val root = borderpane {
         updateEqs()
@@ -51,26 +47,26 @@ class MainView : View("Earthquakes") {
                         }
                     }
                 }
-                menu("Tools"){
+                menu("Tools") {
                     item("Show Graph")
                     action {
-                        find<NewWindow>().openWindow(owner = null)
+                        find<NewWindow>().openWindow()
                     }
                 }
             }
         }
 
         center() {
-            tableview(eq) {
+            tableview(earthQuakes) {
                 readonlyColumn("Title", Properties::title)
                 readonlyColumn("Type", Properties::type)
                 readonlyColumn("Place", Properties::place)
-                readonlyColumn("Time", Properties::timeLD)
+                readonlyColumn("Date", Properties::dateText)
+                readonlyColumn("Time", Properties::timeText)
                 readonlyColumn("Magnitude", Properties::mag)
 
                 columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
                 vboxConstraints {
-
                     vGrow = Priority.ALWAYS
                 }
             }
@@ -97,7 +93,7 @@ class MainView : View("Earthquakes") {
                             }
                         }
                         setOnAction {
-                                updateEqs()
+                            updateEqs()
                         }
                     }
                     hbox(spacing = 8) {
@@ -119,7 +115,7 @@ class MainView : View("Earthquakes") {
                                 }
                             }
                             setOnAction {
-                                    updateEqs()
+                                updateEqs()
                             }
                         }
                     }
@@ -133,7 +129,7 @@ class MainView : View("Earthquakes") {
         val writer = File(fileName).bufferedWriter()
 
         writer.use {
-            for (e in eq) {
+            for (e in earthQuakes) {
                 writer.append("${e.title},${e.type},${e.place},${e.timeLD},${e.mag}\n")
             }
         }
@@ -152,11 +148,69 @@ class MainView : View("Earthquakes") {
 
 
     private fun updateEqs() {
-            eq.asyncItems { eQs() }.fail { alert(Alert.AlertType.ERROR, "Data could not be received", content = "${it.message}").showAndWait() }
+        earthQuakes.asyncItems { eQs() }.fail {
+            alert(
+                Alert.AlertType.ERROR,
+                "Data could not be received",
+                content = "${it.message}"
+            ).showAndWait()
+        }
     }
 }
-class NewWindow : View("Graph") {
-    override val root = hbox {
-        setPrefSize(800.0, 600.0)
+
+class NewWindow : Fragment("Graph") {
+    override val root =
+        linechart(
+                "Earthquake Events ${fromDate.value.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))} - ${
+                    toDate.value.format(
+                        DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                    )
+                }", setXAxis(getMinDate(), getMaxDate()), NumberAxis()
+            )
+            {
+                setPrefSize(600.0, 400.0)
+                series("Daily Events") {
+                    getDailyEvents().forEach {
+                        data(it.key, it.value)
+                    }
+                }
+
+            }
+        }
+
+    private fun setXAxis(min: Double, max: Double): NumberAxis {
+        val xAxis = NumberAxis()
+        xAxis.isAutoRanging = false
+        xAxis.tickUnit = 1.0
+        xAxis.lowerBound = min
+        xAxis.upperBound = max
+        xAxis.tickLabelFormatter = object : StringConverter<Number?>() {
+            override fun toString(num: Number?): String {
+                return LocalDate.ofEpochDay(num!!.toLong()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+            }
+
+            override fun fromString(string: String?): Number? {
+                return null
+            }
+        }
+        return xAxis
     }
-}
+
+    private fun getMinDate() = earthQuakes.minOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
+
+    private fun getMaxDate() = earthQuakes.maxOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
+
+    private fun getDailyEvents():Map<Long, Int>{
+            val results = mutableMapOf<Long, Int>()
+            earthQuakes.forEach {
+
+                val date = it.timeLD.toLocalDate().toEpochDay()
+                if (results.containsKey(date)) {
+                    results.replace(date, results.getValue(date) + 1)
+                } else {
+                    results.putIfAbsent(date, 1)
+                }
+            }
+            return results
+        }
+
