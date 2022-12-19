@@ -147,11 +147,6 @@ class MainView : View("Earthquakes") {
         }
     }
 
-    private fun getEarthQuakes(from: LocalDate, to: LocalDate): FeatureCollection {
-        val jsonString = URL("$urlQuery${from}T00:00:00%2B01:00&endtime=${to}T23:59:59%2B01:00").readText()
-        val json = Json { ignoreUnknownKeys = true }
-        return json.decodeFromString(jsonString)
-    }
 
     private fun eQs() = getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.asObservable()
 
