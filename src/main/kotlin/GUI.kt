@@ -1,14 +1,19 @@
+import javafx.collections.ObservableList
 import javafx.geometry.Pos
 import javafx.scene.chart.NumberAxis
 import javafx.scene.control.Alert
 import javafx.scene.control.DateCell
 import javafx.scene.control.TableView
 import javafx.scene.layout.Priority
+import javafx.stage.FileChooser
 import javafx.stage.Stage
 import javafx.util.StringConverter
 import tornadofx.*
 import java.io.File
+import java.net.URL
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.concurrent.fixedRateTimer
 
@@ -31,11 +36,9 @@ class GUI : App(MainView::class) {
 class MainView : View("Earthquakes") {
     init {
         fixedRateTimer("Timer", true, 0L, 5000) {
-                earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.toObservable()}.fail {
-                alert(Alert.AlertType.ERROR,"Error",it.message).showAndWait()
+            updateEarthQuakes()
             }
         }
-    }
 
     override val root = borderpane {
         top {
@@ -50,6 +53,15 @@ class MainView : View("Earthquakes") {
                             }
                         }
                     }
+                    item("Import CSV") {
+                        action {
+                            try {
+                                find<CsvWindow>().openWindow()
+                            } catch (e: Exception) {
+                                alert(Alert.AlertType.WARNING, "File could not be read", content = "${e.message}")
+                            }
+                        }
+                    }
                 }
                 menu("Tools") {
                     item("Show Graph")
@@ -58,7 +70,7 @@ class MainView : View("Earthquakes") {
                             alert(Alert.AlertType.WARNING, "Not enough Days", content = "Please specify a time-range from at least two Days")
                         }
                         else {
-                            find<NewWindow>().openWindow()
+                            find<ChartWindow>().openWindow()
                         }
                     }
                 }
@@ -67,9 +79,9 @@ class MainView : View("Earthquakes") {
 
         center() {
             tableview(earthQuakes) {
-                readonlyColumn("Title", Properties::title)
                 readonlyColumn("Type", Properties::type)
-                readonlyColumn("Place", Properties::place)
+                readonlyColumn("Location", Properties::location)
+                readonlyColumn("Region", Properties::region)
                 readonlyColumn("Date", Properties::dateText)
                 readonlyColumn("Time", Properties::timeText)
                 readonlyColumn("Magnitude", Properties::mag)
@@ -102,14 +114,7 @@ class MainView : View("Earthquakes") {
                             }
                         }
                         setOnAction {
-                            earthQuakes.asyncItems {
-                                getEarthQuakes(
-                                    fromDate.value,
-                                    toDate.value
-                                ).features.map { i -> i.properties }.toObservable()
-                            }.fail {
-                                alert(Alert.AlertType.ERROR, "Error", it.message).showAndWait()
-                            }
+                            updateEarthQuakes()
                         }
                     }
                     hbox(spacing = 8) {
@@ -131,11 +136,7 @@ class MainView : View("Earthquakes") {
                                 }
                             }
                             setOnAction {
-                                runAsync {
-                                    earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.toObservable()}
-                                } fail {
-                                   alert(Alert.AlertType.ERROR,"Error",it.message).showAndWait()
-                                }
+                                updateEarthQuakes()
                             }
                         }
                     }
@@ -144,44 +145,98 @@ class MainView : View("Earthquakes") {
         }
     }
 
-    private fun exportCSV() {
-        val fileName = getFileName()
-        val writer = File(fileName).bufferedWriter()
 
-        writer.use {
-            for (e in earthQuakes) {
-                writer.append("${e.title},${e.type},${e.place},${e.timeLD},${e.mag}\n")
+
+    private fun updateEarthQuakes() = runAsync {
+                                                    earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.toObservable()}
+                                                } fail {
+                                                    alert(Alert.AlertType.ERROR,"Error",it.message).showAndWait()
+                                                }
+
+    private fun exportCSV() {
+        val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data${File.separator}"),FileChooserMode.Save){
+            initialFileName = getFileName()
+        }
+        if(fileName.size == 1){
+            val writer = fileName[0].bufferedWriter()
+            writer.use {
+                for (e in earthQuakes) {
+                    writer.append("${e.type},${e.location},${e.region},${e.timeLD},${e.mag}\n")
+                }
             }
         }
     }
+
     private fun getFileName(): String {
         return if (fromDate.value == toDate.value) {
-            "data${File.separator}Earthquakes_${fromDate.value}.csv"
+            "Earthquakes_${fromDate.value}.csv"
         } else {
-            "data${File.separator}Earthquakes_${fromDate.value}-${toDate.value}.csv"
+            "Earthquakes_${fromDate.value}-${toDate.value}.csv"
         }
     }
 }
 
-class NewWindow : Fragment("Graph") {
+private fun importCSV():ObservableList<Properties> {
+    val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data${File.separator}"),FileChooserMode.Single)
+    if(fileName.size == 1){
+        val prop = mutableListOf<Properties>()
+        val lines = fileName[0].useLines { it.toList() }
+
+        lines.forEach {
+            val fields = it.split(",")
+            val type = fields[0]
+            val place = "${fields[1]},${fields[2]}"
+            val time = LocalDateTime.parse(fields[3]).toInstant(ZoneId.systemDefault().rules.getOffset(LocalDateTime.now())).toEpochMilli()
+            val mag = if(fields[4] == "null"){
+                null
+            }
+            else{fields[4].toDouble()}
+
+            prop.add(Properties(mag,place,time,type))
+        }
+        return prop.toObservable()
+    }
+    else{return observableListOf<Properties>()}
+}
+
+
+class CsvWindow : Fragment("Graph") {
+    override val root =
+        tableview(importCSV()) {
+            readonlyColumn("Type", Properties::type)
+            readonlyColumn("Location", Properties::location)
+            readonlyColumn("Region", Properties::region)
+            readonlyColumn("Date", Properties::dateText)
+            readonlyColumn("Time", Properties::timeText)
+            readonlyColumn("Magnitude", Properties::mag)
+
+            columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
+            vboxConstraints {
+                vGrow = Priority.ALWAYS
+            }
+            setPrefSize(600.0, 400.0)
+        }
+}
+
+class ChartWindow : Fragment("Imported Data") {
     override val root =
         linechart(
-                "Earthquake Events ${fromDate.value.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))} - ${
-                    toDate.value.format(
-                        DateTimeFormatter.ofPattern("dd.MM.yyyy")
-                    )
-                }", setXAxis(getMinDate(), getMaxDate()), NumberAxis()
-            )
-            {
-                setPrefSize(600.0, 400.0)
-                series("Daily Events") {
-                    getDailyEvents().forEach {
-                        data(it.key, it.value)
-                    }
+            "Earthquake Events ${fromDate.value.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))} - ${
+                toDate.value.format(
+                    DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                )
+            }", setXAxis(getMinDate(), getMaxDate()), NumberAxis()
+        )
+        {
+            setPrefSize(600.0, 400.0)
+            series("Daily Events") {
+                getDailyEvents().forEach {
+                    data(it.key, it.value)
                 }
-
             }
+
         }
+}
 
     private fun setXAxis(min: Double, max: Double): NumberAxis {
         val xAxis = NumberAxis()

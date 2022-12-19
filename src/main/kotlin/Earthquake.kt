@@ -25,7 +25,6 @@ const val urlQuery =
  * @property place - place
  * @property time
  * @property type
- * @property title
  * @constructor Create empty Properties
  *
  * You can add more properties when needed
@@ -36,14 +35,21 @@ data class Properties(
     val place: String?,
     var time: Long,
     val type: String,
-    val title: String
 ){
     @Contextual
     val timeLD: LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),ZoneId.systemDefault())
     val timeText: String = timeLD.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
     val dateText: String = timeLD.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-    
-}
+
+    val location:String
+        get() =  if(place != null){
+            place.split(",")[0]
+        } else ""
+    val region:String
+     get() = if(place != null && place.split(",").size > 1){
+            place.split(",")[1]
+        } else ""
+    }
 
 /**
  * Feature - describes one earthquake event
