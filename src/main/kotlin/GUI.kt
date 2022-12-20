@@ -247,15 +247,21 @@ class ChartWindow : Fragment("Chart") {
 
     //Update Items of Earthquake List asynchronously and shows an Error alert message if failed
     private fun updateEarthQuakes() = runAsync {
-                                                    earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.toObservable()}
+                                                    earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value)
+                                                        .features.map { i -> i.properties }
+                                                        .toObservable()}
                                                 } fail {
-                                                    alert(Alert.AlertType.ERROR,"Error",it.message).showAndWait() }
-    // Lets user pick a path to store the on the main window displayed list in an csv file
+                                                    alert(Alert.AlertType.ERROR,"Error",it.message)
+                                                        .showAndWait() }
+
+    // Lets user pick a path to store the on the main window displayed list in csv file
     private fun exportCSV() {
         if(!File("data").isDirectory){
             Files.createDirectory(Paths.get("data"))}
 
-        val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data"),FileChooserMode.Save){
+        val fileName =  chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),
+                        File("data"),
+                        FileChooserMode.Save){
             initialFileName = getFileName()
         }
         if(fileName.size == 1){
@@ -273,7 +279,9 @@ private fun importCSV():ObservableList<Properties> {
     if(!File("data").isDirectory){
     Files.createDirectory(Paths.get("data"))}
 
-    val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data"),FileChooserMode.Single)
+    val fileName =  chooseFile("Choose Folder",
+                    arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),
+                    File("data"),FileChooserMode.Single)
 
     if(fileName.size == 1){
         val prop = mutableListOf<Properties>()
@@ -283,7 +291,9 @@ private fun importCSV():ObservableList<Properties> {
             val fields = it.split(",")
             val type = fields[0]
             val place = "${fields[1]},${fields[2]}"
-            val time = LocalDateTime.parse(fields[3]).toInstant(ZoneId.systemDefault().rules.getOffset(LocalDateTime.now())).toEpochMilli()
+            val time = LocalDateTime.parse(fields[3])
+                .toInstant(ZoneId.systemDefault().rules.getOffset(LocalDateTime.now()))
+                .toEpochMilli()
             val mag = if(fields[4] == "null"){
                 null
             }
