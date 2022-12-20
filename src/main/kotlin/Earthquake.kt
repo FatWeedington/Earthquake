@@ -25,6 +25,7 @@ const val urlQuery =
  *
  * You can add more properties when needed
  */
+//Class wich Objects store the Properties of Earthquake events recieved from API
 @Serializable
 data class Properties(
     val mag: Double?,
@@ -42,10 +43,11 @@ data class Properties(
             place.split(",")[0]
         } else ""
     val region:String
-     get() = if(place != null && place.split(",").size > 1){
-            place.split(",")[1]
-        } else ""
+         get() = if(place != null && place.split(",").size > 1){
+                place.split(",")[1]
+            } else ""
     }
+
 
 /**
  * Feature - describes one earthquake event
@@ -54,6 +56,8 @@ data class Properties(
  * @property properties
  * @constructor Create empty Feature
  */
+
+//Calss Representing the feautures including the Properties of Earthquake wvents
 @Serializable
 data class Feature(
     val type: String,
@@ -67,15 +71,21 @@ data class Feature(
  * @property features - Array of earthquake events
  * @constructor Create empty Feature collection
  */
+
+//class to hold deserialised objects from API-Call
 @Serializable
 data class FeatureCollection(
     val type: String,
     val features: Array<Feature>
 )
 
+
 fun getEarthQuakes(from: LocalDate, to: LocalDate): FeatureCollection {
+    //API-Call
     val jsonString = URL("$urlQuery${from}T00:00:00%2B01:00&endtime=${to}T23:59:59%2B01:00").readText()
+    //Prepare Json Object for deserialization
     val json = Json { ignoreUnknownKeys = true }
+    //deserialize JsonObject to a FeatureCollection
     return json.decodeFromString(jsonString)
 }
 

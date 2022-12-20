@@ -10,20 +10,28 @@ import javafx.stage.Stage
 import javafx.util.StringConverter
 import tornadofx.*
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.concurrent.fixedRateTimer
 
+
+//variables which limits API-Call in a certain timeframe
 private var fromDate = LocalDate.now().toProperty()
 private var toDate = LocalDate.now().toProperty()
+
+//List of Earthquake-Properies Class which is used to update GUI Elements automatically
 private var earthQuakes = mutableListOf<Properties>().asObservable()
 
+//main-function: launches GUI
 fun main(args: Array<String>) {
     launch<GUI>(args)
 }
 
+//Starts Stage/GUI
 class GUI : App(MainView::class) {
     override fun start(stage: Stage) {
         stage.width = 800.0
@@ -32,17 +40,24 @@ class GUI : App(MainView::class) {
     }
 }
 
+//class which holds central window of the Application
 class MainView : View("Earthquakes") {
+
+    //init block starts the reoccurring API Call throughout runtime
     init {
         fixedRateTimer("Timer", true, 0L, 5000) {
             updateEarthQuakes()
         }
     }
 
+    //Borderpane which holds all elements of main Window
     override val root = borderpane {
         top {
+            //Menubar for the Actions which can be done
             menubar {
-                menu("Files") {
+                //File Menu
+                menu("File") {
+                    //Menu Item which on Action starts the exportCSV Task and shows an Warning alert Message on failure
                     item("Export CSV") {
                         action {
                             try {
@@ -52,6 +67,7 @@ class MainView : View("Earthquakes") {
                             }
                         }
                     }
+                    //Menu Item which on Action starts the importCSV Task and shows an Warning alert Message on failure
                     item("Import CSV") {
                         action {
                             try {
@@ -62,7 +78,9 @@ class MainView : View("Earthquakes") {
                         }
                     }
                 }
+                //Tools menu for showing graph of current Data
                 menu("Tools") {
+                    // Menu Item which on Action starts showGraph Task and shows an Warning alert Message on failure
                     item("Show Graph")
                     action {
                         if (getDailyEvents().size < 2) {
@@ -80,6 +98,7 @@ class MainView : View("Earthquakes") {
         }
 
         center {
+            //creates Tableview which is bind to automatically updated earthQuakes Lis
             tableview(earthQuakes) {
                 readonlyColumn("Type", Properties::type)
                 readonlyColumn("Location", Properties::location)
@@ -95,6 +114,7 @@ class MainView : View("Earthquakes") {
             }
         }
         bottom {
+            //defines datepickers bind to fromDate/toDate variables to limit api-call and displayed Properties
             hbox(spacing = 20) {
                 minHeight = 35.0
                 hbox(spacing = 8) {
@@ -147,7 +167,9 @@ class MainView : View("Earthquakes") {
         }
     }
 }
-class CsvWindow : Fragment("Graph") {
+
+//class which represents a new window with a tableview to diplay results of an saved CSV File
+class CsvWindow : Fragment("Imported Data") {
     override val root =
         tableview(importCSV()) {
             readonlyColumn("Type", Properties::type)
@@ -157,20 +179,54 @@ class CsvWindow : Fragment("Graph") {
             readonlyColumn("Time", Properties::timeText)
             readonlyColumn("Magnitude", Properties::mag)
 
+            setPrefSize(600.0,400.0)
             columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
             vboxConstraints {
                 vGrow = Priority.ALWAYS
             }
-
-            columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
-            vboxConstraints {
-                vGrow = Priority.ALWAYS
-            }
-            setPrefSize(600.0, 400.0)
         }
 }
 
-class ChartWindow : Fragment("Imported Data") {
+//Creates an Map of the event count within a day to display the data in an line chart
+private fun getDailyEvents():Map<Long, Int>{
+    val results = mutableMapOf<Long, Int>()
+    earthQuakes.forEach {
+
+        val date = it.timeLD.toLocalDate().toEpochDay()
+        if (results.containsKey(date)) {
+            results.replace(date, results.getValue(date) + 1)
+        } else {
+            results.putIfAbsent(date, 1)
+        }
+    }
+    return results
+}
+
+//sets Min/Max date for better presentaion of x-Axis
+private fun getMinDate() = earthQuakes.minOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
+private fun getMaxDate() = earthQuakes.maxOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
+
+//function to format xAxis of line chart to chronologically order results
+private fun setXAxis(min: Double, max: Double): NumberAxis {
+    val xAxis = NumberAxis()
+    xAxis.isAutoRanging = false
+    xAxis.tickUnit = 1.0
+    xAxis.lowerBound = min
+    xAxis.upperBound = max
+    xAxis.tickLabelFormatter = object : StringConverter<Number?>() {
+        override fun toString(num: Number?): String {
+            return LocalDate.ofEpochDay(num!!.toLong()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+        }
+
+        override fun fromString(string: String?): Number? {
+            return null
+        }
+    }
+    return xAxis
+}
+
+//class which represents a new window with a Line chart to display progress of earthquake events within the in the mainWindow defined Timeframe
+class ChartWindow : Fragment("Chart") {
     override val root =
         linechart(
             "Earthquake Events ${fromDate.value.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))} - ${
@@ -190,31 +246,17 @@ class ChartWindow : Fragment("Imported Data") {
         }
 }
 
-    private fun setXAxis(min: Double, max: Double): NumberAxis {
-        val xAxis = NumberAxis()
-        xAxis.isAutoRanging = false
-        xAxis.tickUnit = 1.0
-        xAxis.lowerBound = min
-        xAxis.upperBound = max
-        xAxis.tickLabelFormatter = object : StringConverter<Number?>() {
-            override fun toString(num: Number?): String {
-                return LocalDate.ofEpochDay(num!!.toLong()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-            }
-
-            override fun fromString(string: String?): Number? {
-                return null
-            }
-        }
-        return xAxis
-    }
-
+    //Update Items of Earthquake List asynchronously and shows an Error alert message if failed
     private fun updateEarthQuakes() = runAsync {
                                                     earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value).features.map { i -> i.properties }.toObservable()}
                                                 } fail {
                                                     alert(Alert.AlertType.ERROR,"Error",it.message).showAndWait() }
-
+    // Lets user pick a path to store the on the main window displayed list in an csv file
     private fun exportCSV() {
-        val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data${File.separator}"),FileChooserMode.Save){
+        if(!File("data").isDirectory){
+            Files.createDirectory(Paths.get("data"))}
+
+        val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data"),FileChooserMode.Save){
             initialFileName = getFileName()
         }
         if(fileName.size == 1){
@@ -227,15 +269,20 @@ class ChartWindow : Fragment("Imported Data") {
         }
     }
 
-
+// Lets user pick a file to import the results of an previously exported list
 private fun importCSV():ObservableList<Properties> {
-    val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data${File.separator}"),FileChooserMode.Single)
+    if(!File("data").isDirectory){
+    Files.createDirectory(Paths.get("data"))}
+
+    val fileName = chooseFile("Choose Folder", arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),File("data"),FileChooserMode.Single)
+
     if(fileName.size == 1){
         val prop = mutableListOf<Properties>()
         val lines = fileName[0].useLines { it.toList() }
 
         lines.forEach {
             val fields = it.split(",")
+            if(fields.size != 4){throw Exception("File not Valid")}
             val type = fields[0]
             val place = "${fields[1]},${fields[2]}"
             val time = LocalDateTime.parse(fields[3]).toInstant(ZoneId.systemDefault().rules.getOffset(LocalDateTime.now())).toEpochMilli()
@@ -250,6 +297,8 @@ private fun importCSV():ObservableList<Properties> {
     }
     else{return observableListOf()}
 }
+
+    //sets Filname which is shown in the filechooser regarding the selection in the main view
     private fun getFileName(): String {
         return if (fromDate.value == toDate.value) {
             "Earthquakes_${fromDate.value}.csv"
@@ -257,23 +306,3 @@ private fun importCSV():ObservableList<Properties> {
             "Earthquakes_${fromDate.value}-${toDate.value}.csv"
         }
     }
-
-
-    private fun getMinDate() = earthQuakes.minOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
-
-    private fun getMaxDate() = earthQuakes.maxOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
-
-    private fun getDailyEvents():Map<Long, Int>{
-            val results = mutableMapOf<Long, Int>()
-            earthQuakes.forEach {
-
-                val date = it.timeLD.toLocalDate().toEpochDay()
-                if (results.containsKey(date)) {
-                    results.replace(date, results.getValue(date) + 1)
-                } else {
-                    results.putIfAbsent(date, 1)
-                }
-            }
-            return results
-        }
-
