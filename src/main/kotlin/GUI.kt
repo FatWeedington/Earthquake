@@ -18,7 +18,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.concurrent.fixedRateTimer
 
-
 //variables which limits API-Call in a certain timeframe
 private var fromDate = LocalDate.now().toProperty()
 private var toDate = LocalDate.now().toProperty()
@@ -237,7 +236,7 @@ class ChartWindow : Fragment("Chart") {
         )
         {
             setPrefSize(600.0, 400.0)
-            series("Daily Events") {
+            series("Daily earthquake events") {
                 getDailyEvents().forEach {
                     data(it.key, it.value)
                 }
