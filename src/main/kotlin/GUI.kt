@@ -129,7 +129,7 @@ class MainView : View("Earthquakes") {
                                     super.updateItem(item, empty)
                                     isDisable =
                                         item.isAfter(LocalDate.now()) || item.isBefore(
-                                            LocalDate.now().minusYears(10)
+                                            LocalDate.now().minusDays(40)
                                         ) || item.isAfter(toDate.value)
                                 }
                             }
