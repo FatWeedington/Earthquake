@@ -99,12 +99,12 @@ class MainView : View("Earthquakes") {
         center {
             //creates Tableview which is bind to automatically updated earthQuakes Lis
             tableview(earthQuakes) {
-                readonlyColumn("Type", Properties::type)
-                readonlyColumn("Location", Properties::location)
-                readonlyColumn("Region", Properties::region)
-                readonlyColumn("Date", Properties::dateText)
-                readonlyColumn("Time", Properties::timeText)
-                readonlyColumn("Magnitude", Properties::mag)
+                readonlyColumn("Type", Properties::type).minWidth(80).maxWidth(100)
+                readonlyColumn("Location", Properties::location).minWidth(100)
+                readonlyColumn("Region", Properties::region).minWidth(130).maxWidth(180)
+                readonlyColumn("Date", Properties::dateText).minWidth(70).maxWidth(100)
+                readonlyColumn("Time", Properties::timeText).minWidth(50).maxWidth(100)
+                readonlyColumn("Magnitude", Properties::mag).minWidth(70).maxWidth(100)
 
                 columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
                 vboxConstraints {
@@ -171,12 +171,12 @@ class MainView : View("Earthquakes") {
 class CsvWindow : Fragment("Imported Data") {
     override val root =
         tableview(importCSV()) {
-            readonlyColumn("Type", Properties::type)
-            readonlyColumn("Location", Properties::location)
-            readonlyColumn("Region", Properties::region)
-            readonlyColumn("Date", Properties::dateText)
-            readonlyColumn("Time", Properties::timeText)
-            readonlyColumn("Magnitude", Properties::mag)
+            readonlyColumn("Type", Properties::type).minWidth(80).maxWidth(100)
+            readonlyColumn("Location", Properties::location).minWidth(100)
+            readonlyColumn("Region", Properties::region).minWidth(130).maxWidth(180)
+            readonlyColumn("Date", Properties::dateText).minWidth(70).maxWidth(100)
+            readonlyColumn("Time", Properties::timeText).minWidth(50).maxWidth(100)
+            readonlyColumn("Magnitude", Properties::mag).minWidth(70).maxWidth(100)
 
             setPrefSize(600.0,400.0)
             columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
@@ -281,7 +281,6 @@ private fun importCSV():ObservableList<Properties> {
 
         lines.forEach {
             val fields = it.split(",")
-            if(fields.size != 4){throw Exception("File not Valid")}
             val type = fields[0]
             val place = "${fields[1]},${fields[2]}"
             val time = LocalDateTime.parse(fields[3]).toInstant(ZoneId.systemDefault().rules.getOffset(LocalDateTime.now())).toEpochMilli()
