@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-// Query all available events with parameters
+// Query all available events with parameters (URL for remote API)
 const val urlQuery =
     "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime="
 

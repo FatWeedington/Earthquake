@@ -167,7 +167,7 @@ class MainView : View("Earthquakes") {
     }
 }
 
-//class which represents a new window with a tableview to diplay results of an saved CSV File
+//class which represents a new window with a tableview to display results of a saved CSV File
 class CsvWindow : Fragment("Imported Data") {
     override val root =
         tableview(importCSV()) {
