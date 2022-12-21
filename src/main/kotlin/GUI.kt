@@ -11,6 +11,7 @@ import javafx.stage.Stage
 import javafx.util.StringConverter
 import tornadofx.*
 import java.io.File
+import java.lang.reflect.Executable
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
@@ -41,17 +42,6 @@ class GUI : App(MainView::class) {
     }
 }
 
-fun startTimer():Timer{
-    val timer = Timer()
-    timer.scheduleAtFixedRate(object: TimerTask() {
-        override fun run() {
-            updateEarthQuakes(timer)
-        }
-
-    },
-        0L, 5000 )
-    return timer
-}
 
 //class which holds central window of the Application
 class MainView : View("Earthquakes") {
@@ -178,6 +168,18 @@ class MainView : View("Earthquakes") {
         }
     }
 }
+//starts Timer to update Tabelview items automatically, delay can be provided in case of error
+fun startTimer(delay: Long = 0L):Timer{
+    val timer = Timer()
+    timer.scheduleAtFixedRate(object: TimerTask() {
+        override fun run() {
+            updateEarthQuakes(timer)
+        }
+
+    },
+        delay, 5000 )
+    return timer
+}
 
 //Update Items of Earthquake List asynchronously and shows an Error alert message if failed
 private fun updateEarthQuakes(timer: Timer? = null) =
@@ -192,7 +194,7 @@ private fun updateEarthQuakes(timer: Timer? = null) =
         }
         val alert = alert(Alert.AlertType.ERROR,"Error",it.message){
         }.showAndWait()
-        if(alert.get() == ButtonType.OK){startTimer()}
+        if(alert.get() == ButtonType.OK){startTimer(10000)}
     }
 
 
@@ -309,6 +311,7 @@ private fun importCSV():ObservableList<Properties> {
 
         lines.forEach {
             val fields = it.split(",")
+            if(fields.size != 5){throw Exception("given file is invalid")}
             val type = fields[0]
             val place = "${fields[1]},${fields[2]}"
             val time = LocalDateTime.parse(fields[3])
