@@ -2,6 +2,7 @@ import javafx.collections.ObservableList
 import javafx.geometry.Pos
 import javafx.scene.chart.NumberAxis
 import javafx.scene.control.Alert
+import javafx.scene.control.ButtonType
 import javafx.scene.control.DateCell
 import javafx.scene.control.TableView
 import javafx.scene.layout.Priority
@@ -16,6 +17,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
 //variables which limits API-Call in a certain timeframe
@@ -39,15 +41,25 @@ class GUI : App(MainView::class) {
     }
 }
 
+fun startTimer():Timer{
+    val timer = Timer()
+    timer.scheduleAtFixedRate(object: TimerTask() {
+        override fun run() {
+            updateEarthQuakes(timer)
+        }
+
+    },
+        0L, 5000 )
+    return timer
+}
+
 //class which holds central window of the Application
 class MainView : View("Earthquakes") {
 
     //init block starts the reoccurring API Call throughout runtime
     init {
-        fixedRateTimer("Timer", true, 0L, 5000) {
-            updateEarthQuakes()
+            startTimer()
         }
-    }
 
     //Borderpane which holds all elements of main Window
     override val root = borderpane {
@@ -167,6 +179,23 @@ class MainView : View("Earthquakes") {
     }
 }
 
+//Update Items of Earthquake List asynchronously and shows an Error alert message if failed
+private fun updateEarthQuakes(timer: Timer? = null) =
+    earthQuakes.asyncItems {
+        getEarthQuakes(fromDate.value, toDate.value)
+            .features.map { i -> i.properties }
+            .toObservable()
+    } fail {
+        if (timer != null) {
+            timer.cancel()
+            timer.purge()
+        }
+        val alert = alert(Alert.AlertType.ERROR,"Error",it.message){
+        }.showAndWait()
+        if(alert.get() == ButtonType.OK){startTimer()}
+    }
+
+
 //class which represents a new window with a tableview to display results of a saved CSV File
 class CsvWindow : Fragment("Imported Data") {
     override val root =
@@ -244,15 +273,6 @@ class ChartWindow : Fragment("Chart") {
 
         }
 }
-
-    //Update Items of Earthquake List asynchronously and shows an Error alert message if failed
-    private fun updateEarthQuakes() = runAsync {
-                                                    earthQuakes.asyncItems{getEarthQuakes(fromDate.value, toDate.value)
-                                                        .features.map { i -> i.properties }
-                                                        .toObservable()}
-                                                } fail {
-                                                    alert(Alert.AlertType.ERROR,"Error",it.message)
-                                                        .showAndWait() }
 
     // Lets user pick a path to store the on the main window displayed list in csv file
     private fun exportCSV() {
