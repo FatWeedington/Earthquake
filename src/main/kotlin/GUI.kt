@@ -1,4 +1,5 @@
 import javafx.collections.ObservableList
+import javafx.event.EventHandler
 import javafx.geometry.Pos
 import javafx.scene.chart.NumberAxis
 import javafx.scene.control.Alert
@@ -18,6 +19,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.system.exitProcess
 
 //variables which limits API-Call in a certain timeframe
 private var fromDate = LocalDate.now().toProperty()
@@ -36,8 +38,12 @@ class GUI : App(MainView::class) {
     override fun start(stage: Stage) {
         stage.width = 800.0
         stage.height = 600.0
+        stage.onCloseRequest = EventHandler {
+            exitProcess(0)
+        }
         super.start(stage)
     }
+
 }
 
 
