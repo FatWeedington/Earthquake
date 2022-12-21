@@ -311,7 +311,7 @@ private fun importCSV():ObservableList<Properties> {
 
         lines.forEach {
             val fields = it.split(",")
-            if(fields.size != 5){throw Exception("given file is invalid")}
+            if(fields.size != 5)throw Exception("given file is invalid")
             val type = fields[0]
             val place = "${fields[1]},${fields[2]}"
             val time = LocalDateTime.parse(fields[3])
