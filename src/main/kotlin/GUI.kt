@@ -11,7 +11,6 @@ import javafx.stage.Stage
 import javafx.util.StringConverter
 import tornadofx.*
 import java.io.File
-import java.lang.reflect.Executable
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
@@ -19,13 +18,12 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
-import kotlin.concurrent.fixedRateTimer
 
 //variables which limits API-Call in a certain timeframe
 private var fromDate = LocalDate.now().toProperty()
 private var toDate = LocalDate.now().toProperty()
 
-//List of Earthquake-Properies Class which is used to update GUI Elements automatically
+//List of earthquake-properties Class which is used to update GUI Elements automatically
 private var earthQuakes = mutableListOf<Properties>().asObservable()
 
 //main-function: launches GUI
@@ -58,7 +56,7 @@ class MainView : View("Earthquakes") {
             menubar {
                 //File Menu
                 menu("File") {
-                    //Menu Item which on Action starts the exportCSV Task and shows an Warning alert Message on failure
+                    //Menu Item which on Action starts the exportCSV Task and shows a Warning alert Message on failure
                     item("Export CSV") {
                         action {
                             try {
@@ -68,7 +66,7 @@ class MainView : View("Earthquakes") {
                             }
                         }
                     }
-                    //Menu Item which on Action starts the importCSV Task and shows an Warning alert Message on failure
+                    //Menu Item which on Action starts the importCSV Task and shows a Warning alert Message on failure
                     item("Import CSV") {
                         action {
                             try {
@@ -81,7 +79,7 @@ class MainView : View("Earthquakes") {
                 }
                 //Tools menu for showing graph of current Data
                 menu("Tools") {
-                    // Menu Item which on Action starts showGraph Task and shows an Warning alert Message on failure
+                    // Menu Item which on Action starts showGraph Task and shows a Warning alert Message on failure
                     item("Show Graph")
                     action {
                         if (getDailyEvents().size < 2) {
@@ -115,7 +113,7 @@ class MainView : View("Earthquakes") {
             }
         }
         bottom {
-            //defines datepickers bind to fromDate/toDate variables to limit api-call and displayed Properties
+            //defines date-pickers bind to fromDate/toDate variables to limit api-call and displayed Properties
             hbox(spacing = 20) {
                 minHeight = 35.0
                 hbox(spacing = 8) {
@@ -168,7 +166,7 @@ class MainView : View("Earthquakes") {
         }
     }
 }
-//starts Timer to update Tabelview items automatically, delay can be provided in case of error
+//starts Timer to update tableview items automatically, delay can be provided in case of error
 fun startTimer(delay: Long = 0L):Timer{
     val timer = Timer()
     timer.scheduleAtFixedRate(object: TimerTask() {
@@ -217,7 +215,7 @@ class CsvWindow : Fragment("Imported Data") {
         }
 }
 
-//Creates an Map of the event count within a day to display the data in an line chart
+//Creates a Map of the event count within a day to display the data in a line chart
 private fun getDailyEvents():Map<Long, Int>{
     val results = mutableMapOf<Long, Int>()
     earthQuakes.forEach {
@@ -232,7 +230,7 @@ private fun getDailyEvents():Map<Long, Int>{
     return results
 }
 
-//sets Min/Max date for better presentaion of x-Axis
+//sets Min/Max date for better presentation of x-Axis
 private fun getMinDate() = earthQuakes.minOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
 private fun getMaxDate() = earthQuakes.maxOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
 
@@ -296,7 +294,7 @@ class ChartWindow : Fragment("Chart") {
         }
     }
 
-// Lets user pick a file to import the results of an previously exported list
+// Lets user pick a file to import the results of a previously exported list
 private fun importCSV():ObservableList<Properties> {
     if(!File("data").isDirectory){
     Files.createDirectory(Paths.get("data"))}
@@ -329,7 +327,7 @@ private fun importCSV():ObservableList<Properties> {
     else{return observableListOf()}
 }
 
-    //sets Filname which is shown in the filechooser regarding the selection in the main view
+    //sets filename which is shown in the file-chooser regarding the selection in the main view
     private fun getFileName(): String {
         return if (fromDate.value == toDate.value) {
             "Earthquakes_${fromDate.value}.csv"
