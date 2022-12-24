@@ -25,6 +25,8 @@ import kotlin.system.exitProcess
 //variables which limits API-Call in a certain timeframe
 private var fromDate = LocalDate.now().toProperty()
 private var toDate = LocalDate.now().toProperty()
+
+//variable which filters results of API call to a specific region
 private var regionFilter = "".toProperty()
 
 //List of earthquake-properties Class which is used to update GUI Elements automatically
@@ -105,7 +107,7 @@ class MainView : View("Earthquakes") {
         }
 
         center {
-            //creates Tableview which is bind to automatically updated earthQuakes Lis
+            //creates Tableview which is bind to automatically updated earthQuakes List
             tableview(earthQuakes) {
                 readonlyColumn("Type", Properties::type).minWidth(80).maxWidth(100)
                 readonlyColumn("Location", Properties::location).minWidth(100)
@@ -132,6 +134,7 @@ class MainView : View("Earthquakes") {
                     datepicker(fromDate) {
                         valueProperty().bindBidirectional(fromDate)
                         converter = LocalDateStringConverter(DateTimeFormatter.ofPattern("dd.MM.yyyy"),null)
+                        //update Datepicker Cells to limit closable dates
                         setDayCellFactory {
                             object : DateCell() {
                                 override fun updateItem(item: LocalDate, empty: Boolean) {
@@ -202,7 +205,8 @@ fun startTimer(delay: Long = 0L):Timer{
     return timer
 }
 
-//Update Items of Earthquake List asynchronously and shows an Error alert message if failed
+/*Update Items of Earthquake List asynchronously and shows an Error alert message if failed
+Additional filters list to given search string in Region */
 private fun updateEarthQuakes(timer: Timer? = null) {
     earthQuakes.asyncItems {
         if(regionFilter.value != ""){
