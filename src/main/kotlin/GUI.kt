@@ -319,7 +319,7 @@ class ChartWindow : Fragment("Chart") {
             val writer = fileName[0].bufferedWriter()
             writer.use {
                 for (e in earthQuakes) {
-                    writer.append("${e.type},${e.location},${e.region},${e.timeLD},${e.mag}\n")
+                    writer.append("${e.type},${e.location},${e.region},${e.time},${e.mag}\n")
                 }
             }
         }
@@ -343,9 +343,7 @@ private fun importCSV():ObservableList<Properties> {
             if(fields.size != 5)throw Exception("given file is invalid")
             val type = fields[0]
             val place = "${fields[1]},${fields[2]}"
-            val time = LocalDateTime.parse(fields[3])
-                .toInstant(ZoneId.systemDefault().rules.getOffset(LocalDateTime.now()))
-                .toEpochMilli()
+            val time = (fields[3]).toLong()
             val mag = if(fields[4] == "null"){
                 null
             }
