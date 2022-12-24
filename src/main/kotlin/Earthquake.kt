@@ -82,7 +82,7 @@ data class FeatureCollection(
 
 fun getEarthQuakes(from: LocalDate, to: LocalDate): FeatureCollection {
     //API-Call
-    val jsonString = URL("$urlQuery${from}T00:00:00%2B01:00&endtime=${to}T23:59:59%2B01:00").readText()
+    val jsonString = URL("$urlQuery${from}T00:00:00%2B01:00&endtime=${to}T23:59:59%2B01:00&limit=20000").readText()
     //Prepare Json Object for deserialization
     val json = Json { ignoreUnknownKeys = true }
     //deserialize JsonObject to a FeatureCollection

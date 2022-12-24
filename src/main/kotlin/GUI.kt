@@ -10,6 +10,7 @@ import javafx.scene.layout.Priority
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import javafx.util.StringConverter
+import javafx.util.converter.LocalDateStringConverter
 import tornadofx.*
 import java.io.File
 import java.nio.file.Files
@@ -24,6 +25,7 @@ import kotlin.system.exitProcess
 //variables which limits API-Call in a certain timeframe
 private var fromDate = LocalDate.now().toProperty()
 private var toDate = LocalDate.now().toProperty()
+private var regionFilter = "".toProperty()
 
 //List of earthquake-properties Class which is used to update GUI Elements automatically
 private var earthQuakes = mutableListOf<Properties>().asObservable()
@@ -129,13 +131,14 @@ class MainView : View("Earthquakes") {
                     label { text = "From:" }
                     datepicker(fromDate) {
                         valueProperty().bindBidirectional(fromDate)
+                        converter = LocalDateStringConverter(DateTimeFormatter.ofPattern("dd.MM.yyyy"),null)
                         setDayCellFactory {
                             object : DateCell() {
                                 override fun updateItem(item: LocalDate, empty: Boolean) {
                                     super.updateItem(item, empty)
                                     isDisable =
                                         item.isAfter(LocalDate.now()) || item.isBefore(
-                                            LocalDate.now().minusDays(40)
+                                            LocalDate.now().minusYears(5)
                                         ) || item.isAfter(toDate.value)
                                 }
                             }
@@ -151,6 +154,7 @@ class MainView : View("Earthquakes") {
                         label { text = "To:" }
                         datepicker(toDate) {
                             valueProperty().bindBidirectional(toDate)
+                            converter = LocalDateStringConverter(DateTimeFormatter.ofPattern("dd.MM.yyyy"),null)
                             setDayCellFactory {
                                 object : DateCell() {
                                     override fun updateItem(item: LocalDate, empty: Boolean) {
@@ -167,11 +171,24 @@ class MainView : View("Earthquakes") {
                             }
                         }
                     }
+                    hbox(spacing = 8) {
+                        hboxConstraints {
+                            alignment = Pos.CENTER_RIGHT
+                        }
+                        label { text = "Region:" }
+                        textfield {
+                            textProperty().bindBidirectional(regionFilter)
+                            }
+                            setOnKeyTyped {
+                                updateEarthQuakes()
+                            }
+                    }
                 }
             }
         }
     }
 }
+
 //starts Timer to update tableview items automatically, delay can be provided in case of error
 fun startTimer(delay: Long = 0L):Timer{
     val timer = Timer()
@@ -186,20 +203,28 @@ fun startTimer(delay: Long = 0L):Timer{
 }
 
 //Update Items of Earthquake List asynchronously and shows an Error alert message if failed
-private fun updateEarthQuakes(timer: Timer? = null) =
+private fun updateEarthQuakes(timer: Timer? = null) {
     earthQuakes.asyncItems {
-        getEarthQuakes(fromDate.value, toDate.value)
+        if(regionFilter.value != ""){
+            getEarthQuakes(fromDate.value, toDate.value)
+                .features.map { i -> i.properties }
+                .filter { it.region.contains(regionFilter.value,true) }
+        }
+        else getEarthQuakes(fromDate.value, toDate.value)
             .features.map { i -> i.properties }
-            .toObservable()
     } fail {
         if (timer != null) {
             timer.cancel()
             timer.purge()
         }
-        val alert = alert(Alert.AlertType.ERROR,"Error",it.message){
+        val alert = alert(Alert.AlertType.ERROR, "Error", it.message) {
         }.showAndWait()
-        if(alert.get() == ButtonType.OK){startTimer(10000)}
+        if (alert.get() == ButtonType.OK) {
+            startTimer(10000)
+        }
     }
+}
+
 
 
 //class which represents a new window with a tableview to display results of a saved CSV File
