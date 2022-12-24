@@ -296,7 +296,7 @@ class ChartWindow : Fragment("Chart") {
         )
         {
             setPrefSize(600.0, 400.0)
-            series("Daily earthquake events") {
+            series("Daily earthquake events ${regionFilter.value}") {
                 getDailyEvents().forEach {
                     data(it.key, it.value)
                 }
