@@ -34,9 +34,13 @@ data class Properties(
     val type: String,
 ){
     @Contextual
-    val timeLD: LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),ZoneId.systemDefault())
-    val timeText: String = timeLD.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-    val dateText: String = timeLD.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+    val timeLD: LocalDateTime
+            get() = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),ZoneId.systemDefault())
+    val timeText: String
+        get() = timeLD.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+
+    val dateText: String
+        get() = timeLD.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
 
     val location:String
         get() =  if(place != null){

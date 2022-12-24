@@ -361,8 +361,8 @@ private fun importCSV():ObservableList<Properties> {
     //sets filename which is shown in the file-chooser regarding the selection in the main view
     private fun getFileName(): String {
         return if (fromDate.value == toDate.value) {
-            "Earthquakes_${fromDate.value}.csv"
+            "Earthquakes_${fromDate.value}_${regionFilter.value}.csv"
         } else {
-            "Earthquakes_${fromDate.value}-${toDate.value}.csv"
+            "Earthquakes_${fromDate.value}-${toDate.value}_${regionFilter.value}.csv"
         }
     }
