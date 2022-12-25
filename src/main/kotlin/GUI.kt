@@ -1,4 +1,3 @@
-import javafx.beans.property.StringProperty
 import javafx.collections.ObservableList
 import javafx.event.EventHandler
 import javafx.geometry.Pos
@@ -32,9 +31,9 @@ private var regionFilter = "".toProperty()
 private var earthQuakes = mutableListOf<Properties>().asObservable()
 
 //main-function: launches GUI
-fun main(args: Array<String>) {
-    launch<GUI>(args)
-}
+    fun main(args: Array<String>) {
+        launch<GUI>(args)
+    }
 
 //Starts Stage/GUI
 class GUI : App(MainView::class) {
@@ -190,42 +189,42 @@ class MainView : View("Earthquakes") {
     }
 }
 
-//starts Timer to update tableview items automatically, delay can be provided in case of error
-fun startTimer(delay: Long = 0L):Timer{
-    val timer = Timer()
-    timer.scheduleAtFixedRate(object: TimerTask() {
-        override fun run() {
-            updateEarthQuakes(timer)
-        }
+    //starts Timer to update tableview items automatically, delay can be provided in case of error
+    fun startTimer(delay: Long = 0L):Timer{
+        val timer = Timer()
+        timer.scheduleAtFixedRate(object: TimerTask() {
+            override fun run() {
+                updateEarthQuakes(timer)
+            }
 
-    },
-        delay, 5000 )
-    return timer
-}
+        },
+            delay, 5000 )
+        return timer
+    }
 
-/*Update Items of Earthquake List asynchronously and shows an Error alert message if failed
-Additional filters list to given search string in Region */
-private fun updateEarthQuakes(timer: Timer? = null) {
-    earthQuakes.asyncItems {
-        if(regionFilter.value != ""){
-            getEarthQuakes(fromDate.value, toDate.value)
+    /*Update Items of Earthquake List asynchronously and shows an Error alert message if failed
+    Additional filters list to given search string in Region */
+    private fun updateEarthQuakes(timer: Timer? = null) {
+        earthQuakes.asyncItems {
+            if(regionFilter.value != ""){
+                getEarthQuakes(fromDate.value, toDate.value)
+                    .features.map { i -> i.properties }
+                    .filter { it.region.contains(regionFilter.value,true) }
+            }
+            else getEarthQuakes(fromDate.value, toDate.value)
                 .features.map { i -> i.properties }
-                .filter { it.region.contains(regionFilter.value,true) }
-        }
-        else getEarthQuakes(fromDate.value, toDate.value)
-            .features.map { i -> i.properties }
-    } fail {
-        if (timer != null) {
-            timer.cancel()
-            timer.purge()
-        }
-        val alert = alert(Alert.AlertType.ERROR, "Error", it.message) {
-        }.showAndWait()
-        if (alert.get() == ButtonType.OK) {
-            startTimer(10000)
+        } fail {
+            if (timer != null) {
+                timer.cancel()
+                timer.purge()
+            }
+            val alert = alert(Alert.AlertType.ERROR, "Error", it.message) {
+            }.showAndWait()
+            if (alert.get() == ButtonType.OK) {
+                startTimer(10000)
+            }
         }
     }
-}
 
 //class which represents a new window with a tableview to display results of a saved CSV File
 class CsvWindow: Fragment() {
@@ -281,43 +280,43 @@ class CsvWindow: Fragment() {
             return Pair(prop.toObservable(),fileName[0].nameWithoutExtension)
         }
 
-//Creates a Map of the event count within a day to display the data in a line chart
-private fun getDailyEvents():Map<Long, Int>{
-    val results = mutableMapOf<Long, Int>()
-    earthQuakes.forEach {
+    //Creates a Map of the event count within a day to display the data in a line chart
+    private fun getDailyEvents():Map<Long, Int>{
+        val results = mutableMapOf<Long, Int>()
+        earthQuakes.forEach {
 
-        val date = it.timeLD.toLocalDate().toEpochDay()
-        if (results.containsKey(date)) {
-            results.replace(date, results.getValue(date) + 1)
-        } else {
-            results.putIfAbsent(date, 1)
+            val date = it.timeLD.toLocalDate().toEpochDay()
+            if (results.containsKey(date)) {
+                results.replace(date, results.getValue(date) + 1)
+            } else {
+                results.putIfAbsent(date, 1)
+            }
         }
+        return results
     }
-    return results
-}
 
-//sets Min/Max date for better presentation of x-Axis
-private fun getMinDate() = earthQuakes.minOf { it.timeLD }.toLocalDate().toEpochDay().toDouble()
-private fun getMaxDate() = earthQuakes.maxOf { it.timeLD }.toLocalDate().toEpochDay().toDouble()
+    //sets Min/Max date for better presentation of x-Axis
+    private fun getMinDate() = earthQuakes.minOf { it.timeLD }.toLocalDate().toEpochDay().toDouble()
+    private fun getMaxDate() = earthQuakes.maxOf { it.timeLD }.toLocalDate().toEpochDay().toDouble()
 
-//function to format xAxis of line chart to chronologically order results
-private fun setXAxis(min: Double, max: Double): NumberAxis {
-    val xAxis = NumberAxis()
-    xAxis.isAutoRanging = false
-    xAxis.tickUnit = 1.0
-    xAxis.lowerBound = min
-    xAxis.upperBound = max
-    xAxis.tickLabelFormatter = object : StringConverter<Number>() {
-        override fun toString(num: Number): String {
-            return LocalDate.ofEpochDay(num.toLong()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+    //function to format xAxis of line chart to chronologically order results
+    private fun setXAxis(min: Double, max: Double): NumberAxis {
+        val xAxis = NumberAxis()
+        xAxis.isAutoRanging = false
+        xAxis.tickUnit = 1.0
+        xAxis.lowerBound = min
+        xAxis.upperBound = max
+        xAxis.tickLabelFormatter = object : StringConverter<Number>() {
+            override fun toString(num: Number): String {
+                return LocalDate.ofEpochDay(num.toLong()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+            }
+
+            override fun fromString(string: String?): Number? {
+                return null
+            }
         }
-
-        override fun fromString(string: String?): Number? {
-            return null
-        }
+        return xAxis
     }
-    return xAxis
-}
 
 //class which represents a new window with a Line chart to display progress of earthquake events within the in the mainWindow defined Timeframe
 class ChartWindow : Fragment("Chart") {
