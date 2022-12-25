@@ -16,8 +16,6 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.system.exitProcess
@@ -50,11 +48,10 @@ class GUI : App(MainView::class) {
 
 }
 
-
 //class which holds central window of the Application
 class MainView : View("Earthquakes") {
 
-    //init block starts the reoccurring API Call throughout runtime
+    //init block starts the reoccurring API Call throughout a Timer
     init {
             startTimer()
         }
