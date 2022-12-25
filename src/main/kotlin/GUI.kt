@@ -1,3 +1,4 @@
+import javafx.beans.property.StringProperty
 import javafx.collections.ObservableList
 import javafx.event.EventHandler
 import javafx.geometry.Pos
@@ -77,7 +78,7 @@ class MainView : View("Earthquakes") {
                     item("Import CSV") {
                         action {
                             try {
-                                find<CsvWindow>().openWindow()
+                                find<CsvWindow>(importCSV()).openWindow()
                             } catch (e: Exception) {
                                 alert(Alert.AlertType.WARNING, "File could not be read", content = "${e.message}")
                             }
@@ -227,9 +228,9 @@ private fun updateEarthQuakes(timer: Timer? = null) {
 }
 
 //class which represents a new window with a tableview to display results of a saved CSV File
-class CsvWindow : Fragment("Imported Data") {
+class CsvWindow(data: Pair<ObservableList<Properties>, String>) : Fragment(data.second) {
     override val root =
-        tableview(importCSV()) {
+        tableview(data.first) {
             readonlyColumn("Type", Properties::type).minWidth(80).maxWidth(100)
             readonlyColumn("Location", Properties::location).minWidth(100)
             readonlyColumn("Region", Properties::region).minWidth(130).maxWidth(180)
@@ -244,6 +245,40 @@ class CsvWindow : Fragment("Imported Data") {
             }
         }
 }
+
+    // Lets user pick a file to import the results of a previously exported list
+    private fun importCSV(): Pair<ObservableList<Properties>, String> {
+        if(!File("data").isDirectory){
+            Files.createDirectory(Paths.get("data"))}
+
+        val fileName =  chooseFile("Choose Folder",
+            arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),
+            File("data"),FileChooserMode.Single)
+
+        if(fileName.size == 1){
+            val prop = mutableListOf<Properties>()
+            val lines = fileName[0].useLines { it.toList() }
+
+            lines.forEach {
+                val fields = it.split(",")
+                if(fields.size != 5){
+                    throw Exception("given file is invalid")
+                }
+                val type = fields[0]
+                val place = "${fields[1]},${fields[2]}"
+                val time = (fields[3]).toLong()
+                val mag = if(fields[4] == "null"){
+                    null
+                }
+                else{fields[4].toDouble()}
+
+                prop.add(Properties(mag, place, time, type))
+            }
+            return Pair(prop.toObservable(),fileName[0].nameWithoutExtension)
+        }
+        else{throw Exception("No data could be found")
+        }
+    }
 
 //Creates a Map of the event count within a day to display the data in a line chart
 private fun getDailyEvents():Map<Long, Int>{
@@ -261,8 +296,8 @@ private fun getDailyEvents():Map<Long, Int>{
 }
 
 //sets Min/Max date for better presentation of x-Axis
-private fun getMinDate() = earthQuakes.minOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
-private fun getMaxDate() = earthQuakes.maxOfOrNull { it.timeLD }?.toLocalDate()?.toEpochDay()?.toDouble()!!
+private fun getMinDate() = earthQuakes.minOf { it.timeLD }.toLocalDate().toEpochDay().toDouble()
+private fun getMaxDate() = earthQuakes.maxOf { it.timeLD }.toLocalDate().toEpochDay().toDouble()
 
 //function to format xAxis of line chart to chronologically order results
 private fun setXAxis(min: Double, max: Double): NumberAxis {
@@ -271,9 +306,9 @@ private fun setXAxis(min: Double, max: Double): NumberAxis {
     xAxis.tickUnit = 1.0
     xAxis.lowerBound = min
     xAxis.upperBound = max
-    xAxis.tickLabelFormatter = object : StringConverter<Number?>() {
-        override fun toString(num: Number?): String {
-            return LocalDate.ofEpochDay(num!!.toLong()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+    xAxis.tickLabelFormatter = object : StringConverter<Number>() {
+        override fun toString(num: Number): String {
+            return LocalDate.ofEpochDay(num.toLong()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
         }
 
         override fun fromString(string: String?): Number? {
@@ -323,37 +358,6 @@ class ChartWindow : Fragment("Chart") {
             }
         }
     }
-
-// Lets user pick a file to import the results of a previously exported list
-private fun importCSV():ObservableList<Properties> {
-    if(!File("data").isDirectory){
-    Files.createDirectory(Paths.get("data"))}
-
-    val fileName =  chooseFile("Choose Folder",
-                    arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),
-                    File("data"),FileChooserMode.Single)
-
-    if(fileName.size == 1){
-        val prop = mutableListOf<Properties>()
-        val lines = fileName[0].useLines { it.toList() }
-
-        lines.forEach {
-            val fields = it.split(",")
-            if(fields.size != 5)throw Exception("given file is invalid")
-            val type = fields[0]
-            val place = "${fields[1]},${fields[2]}"
-            val time = (fields[3]).toLong()
-            val mag = if(fields[4] == "null"){
-                null
-            }
-            else{fields[4].toDouble()}
-
-            prop.add(Properties(mag,place,time,type))
-        }
-        return prop.toObservable()
-    }
-    else{return observableListOf()}
-}
 
     //sets filename which is shown in the file-chooser regarding the selection in the main view
     private fun getFileName(): String {
