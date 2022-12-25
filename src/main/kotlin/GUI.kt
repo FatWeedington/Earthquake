@@ -78,7 +78,7 @@ class MainView : View("Earthquakes") {
                     item("Import CSV") {
                         action {
                             try {
-                                find<CsvWindow>(importCSV()).openWindow()
+                                find<CsvWindow>(mapOf(CsvWindow::data to importCSV())).openWindow()
                             } catch (e: Exception) {
                                 alert(Alert.AlertType.WARNING, "File could not be read", content = "${e.message}")
                             }
@@ -228,7 +228,12 @@ private fun updateEarthQuakes(timer: Timer? = null) {
 }
 
 //class which represents a new window with a tableview to display results of a saved CSV File
-class CsvWindow(data: Pair<ObservableList<Properties>, String>) : Fragment(data.second) {
+class CsvWindow: Fragment() {
+    val data: Pair<ObservableList<Properties>,String> by param()
+    override fun onBeforeShow() {
+        title = data.second
+    }
+
     override val root =
         tableview(data.first) {
             readonlyColumn("Type", Properties::type).minWidth(80).maxWidth(100)
@@ -244,6 +249,7 @@ class CsvWindow(data: Pair<ObservableList<Properties>, String>) : Fragment(data.
                 vGrow = Priority.ALWAYS
             }
         }
+
 }
 
     // Lets user pick a file to import the results of a previously exported list
@@ -255,30 +261,25 @@ class CsvWindow(data: Pair<ObservableList<Properties>, String>) : Fragment(data.
             arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),
             File("data"),FileChooserMode.Single)
 
-        if(fileName.size == 1){
             val prop = mutableListOf<Properties>()
-            val lines = fileName[0].useLines { it.toList() }
+            val lines = fileName[0].bufferedReader().useLines { it.toList() }
 
-            lines.forEach {
-                val fields = it.split(",")
-                if(fields.size != 5){
-                    throw Exception("given file is invalid")
+            for ((i, v) in lines.withIndex()){
+                val fields = v.split(",")
+                if(fields.size != 5 || !fields[3].matches(Regex("[0-9]*")) || !fields[4].matches(Regex("(-?[0-9]*\\.?[0-9]*)|(null)"))){
+                    throw Exception("File not convertable, invalid data on line ${i+1}")
                 }
                 val type = fields[0]
                 val place = "${fields[1]},${fields[2]}"
                 val time = (fields[3]).toLong()
-                val mag = if(fields[4] == "null"){
+                val mag = if(fields[4] == "null" || fields[4] == "" ){
                     null
                 }
                 else{fields[4].toDouble()}
-
                 prop.add(Properties(mag, place, time, type))
             }
             return Pair(prop.toObservable(),fileName[0].nameWithoutExtension)
         }
-        else{throw Exception("No data could be found")
-        }
-    }
 
 //Creates a Map of the event count within a day to display the data in a line chart
 private fun getDailyEvents():Map<Long, Int>{
