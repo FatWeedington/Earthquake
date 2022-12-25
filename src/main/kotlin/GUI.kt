@@ -229,8 +229,6 @@ private fun updateEarthQuakes(timer: Timer? = null) {
     }
 }
 
-
-
 //class which represents a new window with a tableview to display results of a saved CSV File
 class CsvWindow : Fragment("Imported Data") {
     override val root =
