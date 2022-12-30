@@ -131,14 +131,14 @@ class MainView : View("Earthquakes") {
                     datepicker(fromDate) {
                         valueProperty().bindBidirectional(fromDate)
                         converter = LocalDateStringConverter(DateTimeFormatter.ofPattern("dd.MM.yyyy"),null)
-                        //update Datepicker Cells to limit closable dates
+                        //update Datepicker Cells to limit selectable dates
                         setDayCellFactory {
                             object : DateCell() {
                                 override fun updateItem(item: LocalDate, empty: Boolean) {
                                     super.updateItem(item, empty)
                                     isDisable =
                                         item.isAfter(LocalDate.now()) || item.isBefore(
-                                            LocalDate.now().minusYears(5)
+                                            LocalDate.now().minusMonths(2)
                                         ) || item.isAfter(toDate.value)
                                 }
                             }
@@ -155,6 +155,7 @@ class MainView : View("Earthquakes") {
                         datepicker(toDate) {
                             valueProperty().bindBidirectional(toDate)
                             converter = LocalDateStringConverter(DateTimeFormatter.ofPattern("dd.MM.yyyy"),null)
+                            //update Datepicker Cells to limit selectable dates
                             setDayCellFactory {
                                 object : DateCell() {
                                     override fun updateItem(item: LocalDate, empty: Boolean) {
