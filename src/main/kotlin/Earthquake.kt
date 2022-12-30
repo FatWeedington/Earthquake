@@ -83,7 +83,7 @@ data class FeatureCollection(
     val features: Array<Feature>
 )
 
-
+//API-Call converts json-data from API to FeatureCollection
 fun getEarthQuakes(from: LocalDate, to: LocalDate): FeatureCollection {
     //API-Call
     val jsonString = URL("$urlQuery${from}T00:00:00%2B01:00&endtime=${to}T23:59:59%2B01:00&limit=20000").readText()
