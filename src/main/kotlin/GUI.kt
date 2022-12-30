@@ -261,6 +261,8 @@ class CsvWindow: Fragment() {
             arrayOf(FileChooser.ExtensionFilter("CSV Files", "*.csv")),
             File("data"),FileChooserMode.Single)
 
+            if (fileName.isEmpty()){throw Exception("No file selected")}
+
             val prop = mutableListOf<Properties>()
             val lines = fileName[0].bufferedReader().useLines { it.toList() }
 
