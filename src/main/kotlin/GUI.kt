@@ -20,18 +20,18 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.system.exitProcess
 
-//variables which limits API-Call in a certain timeframe
-private var fromDate = LocalDate.now().toProperty()
-private var toDate = LocalDate.now().toProperty()
+//values which limits API-Call in a certain timeframe
+private val fromDate = LocalDate.now().toProperty()
+private val toDate = LocalDate.now().toProperty()
 
-//variable which filters results of API call to a specific region
-private var regionFilter = "".toProperty()
+//value which filters results of API call to a specific region
+private val regionFilter = "".toProperty()
 
 //List of earthquake-properties Class which is used to update GUI Elements automatically
-private var earthQuakes = mutableListOf<Properties>().asObservable()
+private val earthQuakes = mutableListOf<Properties>().asObservable()
 
 //main-function: launches GUI
-    fun main(args: Array<String>) {
+ fun main(args: Array<String>) {
         launch<GUI>(args)
     }
 
@@ -119,8 +119,9 @@ class MainView : View("Earthquakes") {
                 }
             }
         }
+
         bottom {
-            //defines date-pickers bind to fromDate/toDate variables to limit api-call and displayed Properties
+            //defines date-pickers bind to fromDate/toDate values to limit api-call and displayed Properties
             hbox(spacing = 20) {
                 minHeight = 35.0
                 hbox(spacing = 8) {
@@ -191,7 +192,7 @@ class MainView : View("Earthquakes") {
 }
 
     //starts Timer to update tableview items automatically, delay can be provided in case of error
-    fun startTimer(delay: Long = 0L):Timer{
+    private fun startTimer(delay: Long = 0L):Timer{
         val timer = Timer()
         timer.scheduleAtFixedRate(object: TimerTask() {
             override fun run() {
