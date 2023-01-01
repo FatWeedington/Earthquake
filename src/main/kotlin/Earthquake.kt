@@ -3,10 +3,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.net.URL
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.*
 import java.time.format.DateTimeFormatter
 
 // Query all available events with parameters (URL for remote API)
@@ -35,12 +32,12 @@ data class Properties(
 ){
     @Contextual
     val timeLD: LocalDateTime
-            get() = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),ZoneId.systemDefault())
-    val timeText: String
-        get() = timeLD.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+        get() = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),ZoneId.systemDefault())
+    val locTime: LocalTime
+        get() = timeLD.toLocalTime()
 
-    val dateText: String
-        get() = timeLD.toLocalDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+    val date: LocalDate
+        get() = timeLD.toLocalDate()
 
     val location:String
         get() =  if(place != null){

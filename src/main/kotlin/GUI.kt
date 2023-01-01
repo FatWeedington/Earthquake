@@ -5,6 +5,7 @@ import javafx.scene.chart.NumberAxis
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.DateCell
+import javafx.scene.control.TableCell
 import javafx.scene.control.TableView
 import javafx.scene.layout.Priority
 import javafx.stage.FileChooser
@@ -16,6 +17,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.system.exitProcess
@@ -109,8 +111,38 @@ class MainView : View("Earthquakes") {
                 readonlyColumn("Type", Properties::type).minWidth(80).maxWidth(100)
                 readonlyColumn("Location", Properties::location).minWidth(100)
                 readonlyColumn("Region", Properties::region).minWidth(130).maxWidth(180)
-                readonlyColumn("Date", Properties::dateText).minWidth(70).maxWidth(100)
-                readonlyColumn("Time", Properties::timeText).minWidth(50).maxWidth(100)
+                readonlyColumn("Date", Properties::date){
+                    minWidth = 62.0
+                    maxWidth = 100.0
+                    setCellFactory{
+                        object : TableCell<Properties, LocalDate>(){
+                            override fun updateItem(item: LocalDate?, empty: Boolean) {
+                                super.updateItem(item, empty)
+                                text = if(empty) {
+                                    null
+                                } else {
+                                    item?.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                                }
+                            }
+                        }
+                    }
+                }
+                readonlyColumn("Time", Properties::locTime){
+                    minWidth = 70.0
+                    maxWidth = 100.0
+                    setCellFactory{
+                        object : TableCell<Properties, LocalTime>(){
+                            override fun updateItem(item: LocalTime?, empty: Boolean) {
+                                super.updateItem(item, empty)
+                                text = if(empty) {
+                                    null
+                                } else {
+                                    item?.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                                }
+                            }
+                        }
+                    }
+                }.minWidth(50).maxWidth(100)
                 readonlyColumn("Magnitude", Properties::mag).minWidth(70).maxWidth(100)
 
                 columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
@@ -236,15 +268,44 @@ class CsvWindow: Fragment() {
     }
 
     override val root =
-        tableview(data.first) {
+        tableview(earthQuakes) {
             readonlyColumn("Type", Properties::type).minWidth(80).maxWidth(100)
             readonlyColumn("Location", Properties::location).minWidth(100)
             readonlyColumn("Region", Properties::region).minWidth(130).maxWidth(180)
-            readonlyColumn("Date", Properties::dateText).minWidth(70).maxWidth(100)
-            readonlyColumn("Time", Properties::timeText).minWidth(50).maxWidth(100)
+            readonlyColumn("Date", Properties::date){
+                minWidth = 62.0
+                maxWidth = 100.0
+                setCellFactory{
+                    object : TableCell<Properties, LocalDate>(){
+                        override fun updateItem(item: LocalDate?, empty: Boolean) {
+                            super.updateItem(item, empty)
+                            text = if(empty) {
+                                null
+                            } else {
+                                item?.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                            }
+                        }
+                    }
+                }
+            }
+            readonlyColumn("Time", Properties::locTime){
+                minWidth = 70.0
+                maxWidth = 100.0
+                setCellFactory{
+                    object : TableCell<Properties, LocalTime>(){
+                        override fun updateItem(item: LocalTime?, empty: Boolean) {
+                            super.updateItem(item, empty)
+                            text = if(empty) {
+                                null
+                            } else {
+                                item?.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                            }
+                        }
+                    }
+                }
+            }.minWidth(50).maxWidth(100)
             readonlyColumn("Magnitude", Properties::mag).minWidth(70).maxWidth(100)
 
-            setPrefSize(600.0,400.0)
             columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
             vboxConstraints {
                 vGrow = Priority.ALWAYS
